@@ -1,0 +1,1 @@
+// Tầng 2: Xử lý logic nghiệp vụ (Đa ngôn ngữ, thuyết minh)

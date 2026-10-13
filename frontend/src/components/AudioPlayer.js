@@ -1,0 +1,1 @@
+//Phát âm thanh, tăng giảm âm lượng, Start/Stop

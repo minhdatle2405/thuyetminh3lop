@@ -1,0 +1,1 @@
+// Tầng 3: Truy vấn cơ sở dữ liệu (Database / ORM)

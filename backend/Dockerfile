@@ -1,0 +1,1 @@
+// Đóng gói Backend thành Image
