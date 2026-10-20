@@ -1,1 +1,14 @@
-// Khai báo thư viện Backend
+{
+  "name": "web-thuyetminh-backend",
+  "version": "1.0.0",
+  "private": true,
+  "main": "src/sever.js",
+  "scripts": {
+    "start": "node src/sever.js",
+    "dev": "node src/sever.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.21.2"
+  }
+}
