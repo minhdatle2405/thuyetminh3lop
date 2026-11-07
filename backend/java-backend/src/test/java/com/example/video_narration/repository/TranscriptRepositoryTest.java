@@ -77,4 +77,54 @@ class TranscriptRepositoryTest {
         assertThat(found.getTranslationJob().getJobId())
                 .isEqualTo(job.getJobId());
     }
+        @Test
+    void updateTranscript() {
+        // Tạo nguồn video
+        VideoSource video = new VideoSource();
+        video.setSourceType(VideoSource.SourceType.UPLOAD);
+        video.setOriginalName("update-video.mp4");
+        video.setSourceFilePath("uploads/update-video.mp4");
+        video = videoSourceRepository.saveAndFlush(video);
+
+        // Tạo cấu hình xử lý
+        ProcessingConfig config = new ProcessingConfig();
+        config.setConfigName("Update Config");
+        config.setSourceLanguage("English");
+        config.setTargetLanguage("Vietnamese");
+        config.setSubtitleFormat("SRT");
+        config.setAudioFormat("MP3");
+        config = processingConfigRepository.saveAndFlush(config);
+
+        // Tạo công việc xử lý
+        TranslationJob job = new TranslationJob();
+        job.setVideoSource(video);
+        job.setProcessingConfig(config);
+        job.setStatus(TranslationJob.JobStatus.PENDING);
+        job.setProgressPercent((short) 0);
+        job = translationJobRepository.saveAndFlush(job);
+
+        // Tạo transcript
+        Transcript transcript = new Transcript();
+        transcript.setTranslationJob(job);
+        transcript.setLanguage("English");
+        transcript.setFullText("Hello.");
+
+        transcript = transcriptRepository.saveAndFlush(transcript);
+
+        // Cập nhật nội dung transcript
+        transcript.setFullText(
+                "Hello everyone. Welcome to our video."
+        );
+
+        transcriptRepository.saveAndFlush(transcript);
+
+        // Truy vấn lại dữ liệu
+        Transcript updated = transcriptRepository
+                .findById(transcript.getTranscriptId())
+                .orElseThrow();
+
+        // Kiểm tra kết quả
+        assertThat(updated.getFullText())
+                .isEqualTo("Hello everyone. Welcome to our video.");
+    }
 }

@@ -36,4 +36,32 @@ class VideoSourceRepositoryTest {
         assertThat(found.getSourceType())
                 .isEqualTo(VideoSource.SourceType.YOUTUBE);
     }
+        @Test
+    void updateVideoSource() {
+        // 1. Tạo video ban đầu
+        VideoSource video = new VideoSource();
+        video.setSourceType(VideoSource.SourceType.YOUTUBE);
+        video.setOriginalName("old-video");
+        video.setSourceUrl("https://www.youtube.com/watch?v=old");
+
+        video = videoSourceRepository.saveAndFlush(video);
+
+        // 2. Cập nhật thông tin video
+        video.setOriginalName("updated-video");
+        video.setSourceUrl("https://www.youtube.com/watch?v=updated");
+
+        videoSourceRepository.saveAndFlush(video);
+
+        // 3. Truy vấn lại dữ liệu
+        VideoSource updated = videoSourceRepository
+                .findById(video.getVideoId())
+                .orElseThrow();
+
+        // 4. Kiểm tra kết quả
+        assertThat(updated.getOriginalName())
+                .isEqualTo("updated-video");
+
+        assertThat(updated.getSourceUrl())
+                .isEqualTo("https://www.youtube.com/watch?v=updated");
+    }
 }

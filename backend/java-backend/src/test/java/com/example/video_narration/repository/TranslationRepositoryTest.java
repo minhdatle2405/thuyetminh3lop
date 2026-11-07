@@ -81,4 +81,53 @@ class TranslationRepositoryTest {
         assertThat(found.getTranslationJob().getJobId())
                 .isEqualTo(job.getJobId());
     }
+        @Test
+    void updateTranslation() {
+        // 1. Tạo nguồn video
+        VideoSource video = new VideoSource();
+        video.setSourceType(VideoSource.SourceType.UPLOAD);
+        video.setOriginalName("update-video.mp4");
+        video.setSourceFilePath("uploads/update-video.mp4");
+        video = videoSourceRepository.saveAndFlush(video);
+
+        // 2. Tạo cấu hình xử lý
+        ProcessingConfig config = new ProcessingConfig();
+        config.setConfigName("Update Config");
+        config.setSourceLanguage("English");
+        config.setTargetLanguage("Vietnamese");
+        config.setSubtitleFormat("SRT");
+        config.setAudioFormat("MP3");
+        config = processingConfigRepository.saveAndFlush(config);
+
+        // 3. Tạo công việc dịch
+        TranslationJob job = new TranslationJob();
+        job.setVideoSource(video);
+        job.setProcessingConfig(config);
+        job.setStatus(TranslationJob.JobStatus.PENDING);
+        job.setProgressPercent((short) 0);
+        job = translationJobRepository.saveAndFlush(job);
+
+        // 4. Tạo bản dịch ban đầu
+        Translation translation = new Translation();
+        translation.setTranslationJob(job);
+        translation.setSourceLanguage("English");
+        translation.setTargetLanguage("Vietnamese");
+        translation.setStatus(Translation.TranslationStatus.PENDING);
+
+        translation = translationRepository.saveAndFlush(translation);
+
+        // 5. Cập nhật thông tin bản dịch
+        translation.setTargetLanguage("Chinese");
+
+        translationRepository.saveAndFlush(translation);
+
+        // 6. Truy vấn lại dữ liệu
+        Translation updated = translationRepository
+                .findById(translation.getTranslationId())
+                .orElseThrow();
+
+        // 7. Kiểm tra kết quả
+        assertThat(updated.getTargetLanguage())
+                .isEqualTo("Chinese");
+    }
 }

@@ -124,4 +124,65 @@ class SubtitleSegmentRepositoryTest {
         assertThat(found.getTranscriptSegment().getTranscriptSegId())
                 .isEqualTo(transcriptSegment.getTranscriptSegId());
     }
+        @Test
+    void updateSubtitleSegment() {
+        // Tạo nguồn video
+        VideoSource video = new VideoSource();
+        video.setSourceType(VideoSource.SourceType.UPLOAD);
+        video.setOriginalName("update-video.mp4");
+        video.setSourceFilePath("uploads/update-video.mp4");
+        video = videoSourceRepository.saveAndFlush(video);
+
+        // Tạo cấu hình
+        ProcessingConfig config = new ProcessingConfig();
+        config.setConfigName("Update Config");
+        config.setSourceLanguage("English");
+        config.setTargetLanguage("Vietnamese");
+        config.setSubtitleFormat("SRT");
+        config.setAudioFormat("MP3");
+        config = processingConfigRepository.saveAndFlush(config);
+
+        // Tạo công việc
+        TranslationJob job = new TranslationJob();
+        job.setVideoSource(video);
+        job.setProcessingConfig(config);
+        job.setStatus(TranslationJob.JobStatus.PENDING);
+        job.setProgressPercent((short) 0);
+        job = translationJobRepository.saveAndFlush(job);
+
+        // Tạo bản dịch
+        Translation translation = new Translation();
+        translation.setTranslationJob(job);
+        translation.setSourceLanguage("English");
+        translation.setTargetLanguage("Vietnamese");
+        translation.setStatus(Translation.TranslationStatus.COMPLETED);
+        translation = translationRepository.saveAndFlush(translation);
+
+        // Tạo phụ đề
+        SubtitleSegment subtitle = new SubtitleSegment();
+        subtitle.setTranslation(translation);
+        subtitle.setSequenceNo(1);
+        subtitle.setStartMs(0L);
+        subtitle.setEndMs(2000L);
+        subtitle.setOriginalText("Hello.");
+        subtitle.setTranslatedText("Xin chào.");
+
+        subtitle = subtitleSegmentRepository.saveAndFlush(subtitle);
+
+        // Cập nhật phụ đề
+        subtitle.setOriginalText("Hello everyone.");
+        subtitle.setTranslatedText("Xin chào mọi người.");
+
+        subtitleSegmentRepository.saveAndFlush(subtitle);
+
+        // Kiểm tra dữ liệu sau cập nhật
+        SubtitleSegment updated = subtitleSegmentRepository
+                .findById(subtitle.getSubtitleId())
+                .orElseThrow();
+
+        assertThat(updated.getOriginalText())
+                .isEqualTo("Hello everyone.");
+        assertThat(updated.getTranslatedText())
+                .isEqualTo("Xin chào mọi người.");
+    }
 }

@@ -99,4 +99,66 @@ class AudioOutputRepositoryTest {
         assertThat(found.getVoiceProfile().getVoiceId())
                 .isEqualTo(voice.getVoiceId());
     }
+        @Test
+    void updateAudioOutput() {
+        // 1. Tạo nguồn video
+        VideoSource video = new VideoSource();
+        video.setSourceType(VideoSource.SourceType.UPLOAD);
+        video.setOriginalName("update-video.mp4");
+        video.setSourceFilePath("uploads/update-video.mp4");
+        video = videoSourceRepository.saveAndFlush(video);
+
+        // 2. Tạo cấu hình xử lý
+        ProcessingConfig config = new ProcessingConfig();
+        config.setConfigName("Update Config");
+        config.setSourceLanguage("English");
+        config.setTargetLanguage("Vietnamese");
+        config.setSubtitleFormat("SRT");
+        config.setAudioFormat("MP3");
+        config = processingConfigRepository.saveAndFlush(config);
+
+        // 3. Tạo hồ sơ giọng đọc
+        VoiceProfile voice = new VoiceProfile();
+        voice.setVoiceName("Update Voice");
+        voice.setLanguageCode("vi-VN");
+        voice.setProviderName("Test Provider");
+        voice.setProviderVoiceId("update-voice-001");
+        voice = voiceProfileRepository.saveAndFlush(voice);
+
+        // 4. Tạo công việc dịch
+        TranslationJob job = new TranslationJob();
+        job.setVideoSource(video);
+        job.setProcessingConfig(config);
+        job.setStatus(TranslationJob.JobStatus.PENDING);
+        job.setProgressPercent((short) 0);
+        job = translationJobRepository.saveAndFlush(job);
+
+        // 5. Tạo file âm thanh ban đầu
+        AudioOutput audio = new AudioOutput();
+        audio.setTranslationJob(job);
+        audio.setVoiceProfile(voice);
+        audio.setFileName("old-audio.mp3");
+        audio.setFilePath("output/old-audio.mp3");
+        audio.setFormat("MP3");
+        audio.setDurationMs(60000L);
+
+        audio = audioOutputRepository.saveAndFlush(audio);
+
+        // 6. Cập nhật thông tin file âm thanh
+        audio.setFileName("new-audio.mp3");
+        audio.setFilePath("output/new-audio.mp3");
+        audio.setDurationMs(90000L);
+
+        audioOutputRepository.saveAndFlush(audio);
+
+        // 7. Truy vấn lại dữ liệu
+        AudioOutput updated = audioOutputRepository
+                .findById(audio.getAudioId())
+                .orElseThrow();
+
+        // 8. Kiểm tra kết quả
+        assertThat(updated.getFileName()).isEqualTo("new-audio.mp3");
+        assertThat(updated.getFilePath()).isEqualTo("output/new-audio.mp3");
+        assertThat(updated.getDurationMs()).isEqualTo(90000L);
+    }
 }
