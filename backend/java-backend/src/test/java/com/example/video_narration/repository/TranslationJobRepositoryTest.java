@@ -69,4 +69,48 @@ class TranslationJobRepositoryTest {
         assertThat(found.getProcessingConfig().getConfigId())
                 .isEqualTo(config.getConfigId());
     }
+        @Test
+    void updateTranslationJob() {
+        // 1. Tạo nguồn video
+        VideoSource video = new VideoSource();
+        video.setSourceType(VideoSource.SourceType.UPLOAD);
+        video.setOriginalName("update-video.mp4");
+        video.setSourceFilePath("uploads/update-video.mp4");
+        video = videoSourceRepository.saveAndFlush(video);
+
+        // 2. Tạo cấu hình xử lý
+        ProcessingConfig config = new ProcessingConfig();
+        config.setConfigName("Update Config");
+        config.setSourceLanguage("English");
+        config.setTargetLanguage("Vietnamese");
+        config.setSubtitleFormat("SRT");
+        config.setAudioFormat("MP3");
+        config = processingConfigRepository.saveAndFlush(config);
+
+        // 3. Tạo công việc xử lý ban đầu
+        TranslationJob job = new TranslationJob();
+        job.setVideoSource(video);
+        job.setProcessingConfig(config);
+        job.setStatus(TranslationJob.JobStatus.PENDING);
+        job.setProgressPercent((short) 0);
+
+        job = translationJobRepository.saveAndFlush(job);
+
+        // 4. Cập nhật trạng thái và tiến độ
+        job.setStatus(TranslationJob.JobStatus.PROCESSING);
+        job.setProgressPercent((short) 50);
+
+        translationJobRepository.saveAndFlush(job);
+
+        // 5. Truy vấn lại dữ liệu
+        TranslationJob updated = translationJobRepository
+                .findById(job.getJobId())
+                .orElseThrow();
+
+        // 6. Kiểm tra kết quả
+        assertThat(updated.getStatus())
+                .isEqualTo(TranslationJob.JobStatus.PROCESSING);
+        assertThat(updated.getProgressPercent())
+                .isEqualTo((short) 50);
+    }
 }

@@ -92,4 +92,65 @@ class TranscriptSegmentRepositoryTest {
         assertThat(found.getTranscript().getTranscriptId())
                 .isEqualTo(transcript.getTranscriptId());
     }
+        @Test
+    void updateTranscriptSegment() {
+        // Tạo nguồn video
+        VideoSource video = new VideoSource();
+        video.setSourceType(VideoSource.SourceType.UPLOAD);
+        video.setOriginalName("update-video.mp4");
+        video.setSourceFilePath("uploads/update-video.mp4");
+        video = videoSourceRepository.saveAndFlush(video);
+
+        // Tạo cấu hình xử lý
+        ProcessingConfig config = new ProcessingConfig();
+        config.setConfigName("Update Config");
+        config.setSourceLanguage("English");
+        config.setTargetLanguage("Vietnamese");
+        config.setSubtitleFormat("SRT");
+        config.setAudioFormat("MP3");
+        config = processingConfigRepository.saveAndFlush(config);
+
+        // Tạo công việc xử lý
+        TranslationJob job = new TranslationJob();
+        job.setVideoSource(video);
+        job.setProcessingConfig(config);
+        job.setStatus(TranslationJob.JobStatus.PENDING);
+        job.setProgressPercent((short) 0);
+        job = translationJobRepository.saveAndFlush(job);
+
+        // Tạo transcript
+        Transcript transcript = new Transcript();
+        transcript.setTranslationJob(job);
+        transcript.setLanguage("English");
+        transcript.setFullText("Hello.");
+        transcript = transcriptRepository.saveAndFlush(transcript);
+
+        // Tạo đoạn transcript
+        TranscriptSegment segment = new TranscriptSegment();
+        segment.setTranscript(transcript);
+        segment.setSequenceNo(1);
+        segment.setStartMs(0L);
+        segment.setEndMs(2000L);
+        segment.setOriginalText("Hello.");
+
+        segment = transcriptSegmentRepository.saveAndFlush(segment);
+
+        // Cập nhật nội dung và thời gian
+        segment.setOriginalText("Hello everyone.");
+        segment.setStartMs(500L);
+        segment.setEndMs(3000L);
+
+        transcriptSegmentRepository.saveAndFlush(segment);
+
+        // Truy vấn lại dữ liệu
+        TranscriptSegment updated = transcriptSegmentRepository
+                .findById(segment.getTranscriptSegId())
+                .orElseThrow();
+
+        // Kiểm tra kết quả
+        assertThat(updated.getOriginalText())
+                .isEqualTo("Hello everyone.");
+        assertThat(updated.getStartMs()).isEqualTo(500L);
+        assertThat(updated.getEndMs()).isEqualTo(3000L);
+    }
 }

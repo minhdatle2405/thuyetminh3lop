@@ -49,4 +49,31 @@ class VoiceProfileRepositoryTest {
         assertThat(found.getIsActive()).isTrue();
 
     }
+        @Test
+    void updateVoiceProfile() {
+        // 1. Tạo hồ sơ giọng đọc ban đầu
+        VoiceProfile voice = new VoiceProfile();
+        voice.setVoiceName("Old Voice");
+        voice.setLanguageCode("vi-VN");
+        voice.setProviderName("Test Provider");
+        voice.setProviderVoiceId("update-voice-001");
+        voice.setIsActive(true);
+
+        voice = voiceProfileRepository.saveAndFlush(voice);
+
+        // 2. Cập nhật thông tin
+        voice.setVoiceName("New Voice");
+        voice.setIsActive(false);
+
+        voiceProfileRepository.saveAndFlush(voice);
+
+        // 3. Truy vấn lại dữ liệu
+        VoiceProfile updated = voiceProfileRepository
+                .findById(voice.getVoiceId())
+                .orElseThrow();
+
+        // 4. Kiểm tra kết quả
+        assertThat(updated.getVoiceName()).isEqualTo("New Voice");
+        assertThat(updated.getIsActive()).isFalse();
+    }
 }
